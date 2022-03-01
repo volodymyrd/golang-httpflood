@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"net"
 	"regexp"
-	"strings"
 )
 
 func main() {
-	host := "life.ru"
+	host := ""
 	addr := fmt.Sprintf("%s%s%d", host, ":", 443)
 	header := ""
 
@@ -22,7 +21,7 @@ func main() {
 	}
 	if s, err = tls.Dial("tcp", addr, cfg); err == nil {
 		request := ""
-		request += "GET /"
+		request += "GET /public/metrics/pageview/site?url=/p/1474721"
 		header += " HTTP/1.1\r\nHost: "
 		header += addr + "\r\n"
 
@@ -33,7 +32,6 @@ func main() {
 			if _, err := s.Read(tmp); err == nil {
 				s := string(tmp[:])
 				fmt.Printf("Response: %s\n", s)
-				strings.Contains("something", "some")
 				if matched, _ := regexp.MatchString("HTTP/\\d\\.\\d\\s2\\d+", s); matched == true {
 					fmt.Println("OK")
 				} else {

